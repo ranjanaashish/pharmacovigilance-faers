@@ -29,6 +29,8 @@ Processing, cleansing, harmonizing, and analyzing this heterogeneous volume requ
 
 ## 2. High-Level System Architecture
 
+![High-Level System Architecture](docs/architecture.png)
+
 > [!NOTE]
 > **Data Provenance vs. Runtime Execution:** The OpenFDA FAERS API is contacted **only once** during initial batch acquisition (`data/download_faers.py`) to download raw quarterly JSON archives into the local data lake (`data/raw/`). All downstream distributed processing (PySpark ETL, PRR analytics) and the Streamlit clinical dashboard execute **100% locally and offline** against persistent Parquet datasets (`data/processed/`) and MongoDB with sub-millisecond latency, requiring **zero runtime API calls**.
 
@@ -184,6 +186,7 @@ pharmacovigilance-faers/
 |   |-- raw/                     # Raw OpenFDA FAERS JSON archives (git-ignored)
 |   |-- processed/               # Standardized Parquet partitions (signals & reports)
 |-- docs/                       # Technical specifications & documentation
+|   |-- architecture.png        # High-level system architecture diagram
 |   |-- data_dictionary.md       # ICH E2B & MedDRA regulatory data dictionary
 |   |-- prr_methodology.md       # Mathematical & statistical derivation of Evans criteria
 |-- etl/                        # Distributed Data Ingestion & Transformation
