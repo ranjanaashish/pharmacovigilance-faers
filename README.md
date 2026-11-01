@@ -29,26 +29,29 @@ Processing, cleansing, harmonizing, and analyzing this heterogeneous volume requ
 
 ## 2. High-Level System Architecture
 
+> [!NOTE]
+> **Data Provenance vs. Runtime Execution:** The OpenFDA FAERS API is contacted **only once** during initial batch acquisition (`data/download_faers.py`) to download raw quarterly JSON archives into the local data lake (`data/raw/`). All downstream distributed processing (PySpark ETL, PRR analytics) and the Streamlit clinical dashboard execute **100% locally and offline** against persistent Parquet datasets (`data/processed/`) and MongoDB with sub-millisecond latency, requiring **zero runtime API calls**.
+
 ```mermaid
 flowchart TD
     subgraph S1["1. DATA INGESTION LAYER"]
-        D1["OpenFDA FAERS API<br/>(Bulk Quarterly JSON / 16M+ Reports)"]
+        D1["OpenFDA FAERS Bulk Archives<br/>(16M+ Quarterly JSON Reports)<br/><b>[One-Time Batch Ingestion]</b>"]
         DL["data/download_faers.py<br/>(HTTP Stream + Unzip)"]
-        RAW["Raw Landing Zone<br/>(HDFS / Local Data Lake)"]
+        RAW["Raw Landing Zone<br/>(HDFS / Local Data Lake: data/raw/)"]
         K_PROD["streaming/kafka_producer.py<br/>(Replay / Simulate Live Events)"]
         KAFKA["Apache Kafka<br/>Topic: faers-raw-events"]
         
-        D1 --> DL --> RAW
-        RAW -.-> K_PROD -.-> KAFKA
+        D1 -->|One-time initial fetch| DL --> RAW
+        RAW -.->|Simulated live stream| K_PROD -.-> KAFKA
     end
 
     subgraph S2["2. DISTRIBUTED ETL & PROCESSING ENGINE"]
         INGEST["01_ingest.py<br/>• Schema Extraction<br/>• Multi-line JSON Parsing"]
         CLEAN["02_clean.py<br/>• Windowed Deduplication<br/>• Age Normalization (800-805)<br/>• Sex Code Standardization"]
         FLATTEN["03_flatten.py<br/>• Explode patient.drug[]<br/>• Explode patient.reaction[]<br/>• Generic Name Resolution"]
-        PARQUET["Optimized Storage<br/>(Snappy-Compressed Parquet)"]
+        PARQUET["Optimized Storage<br/>(Snappy Parquet: data/processed/)"]
 
-        RAW --> INGEST --> CLEAN --> FLATTEN --> PARQUET
+        RAW -->|Offline batch read| INGEST --> CLEAN --> FLATTEN --> PARQUET
         KAFKA -.-> SPARK_STREAM["spark_streaming_consumer.py<br/>(Micro-batch Streaming)"] -.-> PARQUET
     end
 
@@ -87,8 +90,8 @@ flowchart TD
         UI3["03_top_signals.py<br/>(Global Prioritization Matrix)"]
         UI4["04_demographics.py<br/>(Vulnerable Cohort Blind Spots)"]
 
-        MONGO --> LOADER
-        HIVE -.-> LOADER
+        MONGO -->|Sub-millisecond query| LOADER
+        HIVE -.->|Warehouse lookup| LOADER
         LOADER --> UI1
         LOADER --> UI2
         LOADER --> UI3
