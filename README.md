@@ -27,51 +27,79 @@ Processing, cleansing, harmonizing, and analyzing this heterogeneous volume requ
 
 ---
 
-## 2. End-to-End System Architecture
+## 2. High-Level System Architecture
 
-The platform implements a **Decoupled Analytical Lakehouse & Serving Architecture**:
+```mermaid
+flowchart TD
+    subgraph S1["1. DATA INGESTION LAYER"]
+        D1["OpenFDA FAERS API<br/>(Bulk Quarterly JSON / 16M+ Reports)"]
+        DL["data/download_faers.py<br/>(HTTP Stream + Unzip)"]
+        RAW["Raw Landing Zone<br/>(HDFS / Local Data Lake)"]
+        K_PROD["streaming/kafka_producer.py<br/>(Replay / Simulate Live Events)"]
+        KAFKA["Apache Kafka<br/>Topic: faers-raw-events"]
+        
+        D1 --> DL --> RAW
+        RAW -.-> K_PROD -.-> KAFKA
+    end
 
-```
-+-----------------------------------------------------------------------------------+
-|                         DATA INGESTION & STREAMING LAYER                          |
-|  - OpenFDA FAERS Bulk JSON API / Multi-part Partitions (~16M Cumulative Reports)  |
-|  - Real-Time ADE Streaming Producer -> Apache Kafka Broker (Port 9092)            |
-+-----------------------------------------+-----------------------------------------+
-                                          |
-                                          v
-+-----------------------------------------------------------------------------------+
-|                     DISTRIBUTED PROCESSING LAYER (APACHE SPARK 3.5)               |
-|  - Raw JSON Schema Ingestion & Biological Plausibility Validation                 |
-|  - Temporal Age Standardization (Days/Weeks/Months -> Harmonized Years)           |
-|  - MedDRA Reaction Harmonization & RxNorm/Generic Active Ingredient Mapping       |
-|  - Exploding 1-to-N Nested Drug & Reaction Arrays into Flattened Interaction Rows |
-|  - Windowed Case Deduplication (Retaining Latest Case Version by Report ID)       |
-+--------------------+---------------------------------------------+----------------+
-                     |                                             |
-                     v                                             v
-+-----------------------------------------+   +-------------------------------------+
-| ANALYTICAL WAREHOUSE (APACHE HIVE)     |   | STATISTICAL SIGNAL ENGINE           |
-| - Partitioned Columnar Parquet Lakehouse|   | - Distributed 2x2 Contingency Matrix|
-| - Snappy Compression & Dictionary Coding|   | - Proportional Reporting Ratio (PRR)|
-| - External Hive Tables & Star Schema    |   | - Pearson Chi-Square (Yates Corr.)  |
-| - Complex Analytical HiveQL OLAP Queries|   | - 95% Confidence Interval Bands     |
-+-----------------------------------------+   +------------------+------------------+
-                                                                 |
-                                                                 v
-+-----------------------------------------------------------------------------------+
-|                       OPERATIONAL SERVING LAYER (MONGODB 7.0)                     |
-|  - Collections: safety_signals, drug_profiles, surveillance_telemetry             |
-|  - Compound Indexes: (drug_name, reaction) for sub-millisecond retrieval          |
-|  - Metric Indexes: prr (-1), chi_square (-1) for rapid multi-dimensional triage   |
-+-----------------------------------------+-----------------------------------------+
-                                          |
-                                          v
-+-----------------------------------------------------------------------------------+
-|                 CLINICAL SURVEILLANCE INTERACTION LAYER (STREAMLIT)               |
-|  - Institutional Healthcare Design System (Clinical Slate & Navy, Zero Emojis)    |
-|  - Executive Surveillance Telemetry (800k+ Reports, 110k+ Scored Signals)         |
-|  - Compound Deep Dive, Head-to-Head Comparative Risk & Demographic Disparity Audit|
-+-----------------------------------------------------------------------------------+
+    subgraph S2["2. DISTRIBUTED ETL & PROCESSING ENGINE"]
+        INGEST["01_ingest.py<br/>• Schema Extraction<br/>• Multi-line JSON Parsing"]
+        CLEAN["02_clean.py<br/>• Windowed Deduplication<br/>• Age Normalization (800-805)<br/>• Sex Code Standardization"]
+        FLATTEN["03_flatten.py<br/>• Explode patient.drug[]<br/>• Explode patient.reaction[]<br/>• Generic Name Resolution"]
+        PARQUET["Optimized Storage<br/>(Snappy-Compressed Parquet)"]
+
+        RAW --> INGEST --> CLEAN --> FLATTEN --> PARQUET
+        KAFKA -.-> SPARK_STREAM["spark_streaming_consumer.py<br/>(Micro-batch Streaming)"] -.-> PARQUET
+    end
+
+    subgraph S3["3. STATISTICAL SIGNAL ENGINE"]
+        PRR_CALC["analytics/prr_calculator.py<br/>• 2x2 Contingency Matrix<br/>• PRR Ratio & Chi-Square (χ²)<br/>• Threshold: PRR ≥ 2, n ≥ 3, χ² ≥ 4"]
+        DEMO["analytics/demographic_analysis.py<br/>• Age & Gender Distributions<br/>• Underrepresented Cohort Detection"]
+        FATAL["analytics/fatality_analysis.py<br/>• Mortality Rate per Pair<br/>• Lethal Signal Ranking"]
+
+        PARQUET --> PRR_CALC
+        PARQUET --> DEMO
+        PARQUET --> FATAL
+    end
+
+    subgraph S4["4. DUAL PERSISTENCE & WAREHOUSING LAYER"]
+        direction TB
+        subgraph OLAP["OLAP Warehouse"]
+            HIVE["Apache Hive (pharma_db)<br/>• faers_events (Fact)<br/>• drug_reaction_signals<br/>• drug_summary"]
+        end
+        subgraph OLTP["NoSQL Serving Store"]
+            MONGO["MongoDB (pharmacovigilance)<br/>• drug_signals Collection<br/>• Indexed on drug_name & PRR"]
+        end
+
+        PRR_CALC --> HIVE
+        DEMO --> HIVE
+        FATAL --> HIVE
+
+        PRR_CALC --> MONGO
+        DEMO --> MONGO
+        FATAL --> MONGO
+    end
+
+    subgraph S5["5. SERVING & PRESENTATION LAYER (Streamlit)"]
+        LOADER["data_loader.py<br/>(Tiered: Mongo ➔ Parquet ➔ Cached Demo)"]
+        UI1["01_drug_search.py<br/>(Risk Signals & Demographics)"]
+        UI2["02_drug_compare.py<br/>(Head-to-head Safety Profiling)"]
+        UI3["03_top_signals.py<br/>(Global Prioritization Matrix)"]
+        UI4["04_demographics.py<br/>(Vulnerable Cohort Blind Spots)"]
+
+        MONGO --> LOADER
+        HIVE -.-> LOADER
+        LOADER --> UI1
+        LOADER --> UI2
+        LOADER --> UI3
+        LOADER --> UI4
+    end
+
+    style S1 fill:#E3F2FD,stroke:#1565C0,stroke-width:2px
+    style S2 fill:#FFF3E0,stroke:#E65100,stroke-width:2px
+    style S3 fill:#FCE4EC,stroke:#880E4F,stroke-width:2px
+    style S4 fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px
+    style S5 fill:#F3E5F5,stroke:#4A148C,stroke-width:2px
 ```
 
 ---
@@ -109,7 +137,7 @@ An association between drug $D$ and reaction $R$ is classified as a **Statistica
 
 ---
 
-## 4. Technology Stack & Big Data Mapping
+## 4. Technology Stack
 
 | Component | Technology | Version | Purpose |
 |---|---|---|---|
@@ -152,10 +180,9 @@ pharmacovigilance-faers/
 |-- data/                       # Local data directory
 |   |-- raw/                     # Raw OpenFDA FAERS JSON archives (git-ignored)
 |   |-- processed/               # Standardized Parquet partitions (signals & reports)
-|-- docs/                       # Technical specifications & academic documentation
+|-- docs/                       # Technical specifications & documentation
 |   |-- data_dictionary.md       # ICH E2B & MedDRA regulatory data dictionary
 |   |-- prr_methodology.md       # Mathematical & statistical derivation of Evans criteria
-|   |-- syllabus_mapping.md      # ED547 Big Data Analytics syllabus alignment matrix
 |-- etl/                        # Distributed Data Ingestion & Transformation
 |   |-- 01_ingest.py             # JSON streaming reader & raw schema validation
 |   |-- 02_clean.py              # Deduplication, age harmonization & sex mapping
@@ -225,7 +252,7 @@ Run the master distributed processing pipeline:
 ```bash
 python pipeline/run_full_pipeline.py
 ```
-*Note: For machines without local JVM/Hadoop binary configurations, the pipeline includes a high-performance vectorized pure-Python/Pandas fallback (`data/build_real_processed_data.py`) generating identical Parquet schemas.*
+*Note: For environments without local JVM/Hadoop binary configurations, the pipeline includes a high-performance vectorized pure-Python/Pandas fallback (`data/build_real_processed_data.py`) generating identical Parquet schemas.*
 
 ### 6.5 Launch Interactive Clinical Dashboard
 ```bash
@@ -249,35 +276,7 @@ python streaming/spark_streaming_consumer.py
 
 ---
 
-## 8. Academic Alignment: ED547 Big Data Analytics Syllabus
-
-This project directly demonstrates all 5 modules of the Big Data Analytics curriculum:
-
-1. **Module I: Foundations of Big Data & the 5 V's**
-   - High-volume ingestion of multi-gigabyte OpenFDA FAERS JSON archives.
-   - Demonstrates **Volume** (millions of records), **Velocity** (streaming updates), **Variety** (deeply nested JSON arrays), **Veracity** (dirty data cleaning), and **Value** (life-saving signal detection).
-
-2. **Module II: Distributed Computing & Apache Spark**
-   - PySpark DataFrames API utilizing columnar transformations (`explode`, `groupBy`, `join`, `when`).
-   - Catalyst query optimization, window functions for deduplication, and in-memory caching.
-
-3. **Module III: Big Data Warehousing & Apache Hive**
-   - Columnar Parquet storage with Snappy compression and dictionary encoding.
-   - Star schema design with external tables partitioned by reporting quarter.
-
-4. **Module IV: NoSQL Databases & Semi-Structured Data**
-   - Document-oriented storage in MongoDB with compound indexing on `(drug_name, reaction)`.
-   - Sub-millisecond queries powering interactive clinical lookup pages.
-
-5. **Module V: Real-Time Streaming & Visual Analytics**
-   - Apache Kafka pub-sub pipeline coupled with PySpark Structured Streaming micro-batches.
-   - Interactive Streamlit dashboard with statistical volcano plots and demographic heatmaps.
-
-For detailed topic-by-topic proof points, refer to [docs/syllabus_mapping.md](docs/syllabus_mapping.md).
-
----
-
-## 9. References
+## 8. References
 
 1. **Evans, S. J., Waller, P. C., & Davis, S.** (2001). *Use of proportional reporting ratios (PRRs) for signal generation from spontaneous adverse drug reaction reports*. **Pharmacoepidemiology and Drug Safety**, 10(6), 483-486.
 2. **Bate, A., & Evans, S. J.** (2009). *Quantitative signal detection using spontaneous ADR reporting*. **Investigational New Drugs**, 27(6), 527-536.

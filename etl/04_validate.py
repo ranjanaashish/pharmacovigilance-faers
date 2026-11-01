@@ -263,7 +263,7 @@ def run_validate(
         "================================================================================",
         f"Generated At (UTC): {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}",
         f"Input Parquet Path: {in_path.resolve()}",
-        f"Pipeline Target   : Big Data Analytics ED547 Pharmacovigilance Signals",
+        f"Pipeline Target   : Distributed Pharmacovigilance Surveillance Signals",
         "--------------------------------------------------------------------------------",
         "",
         "1. DATASET DIMENSIONS & CARDINALITY",

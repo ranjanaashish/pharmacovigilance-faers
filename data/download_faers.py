@@ -46,7 +46,7 @@ def fetch_manifest(manifest_url: str = OPENFDA_MANIFEST_URL, max_retries: int = 
         If manifest cannot be retrieved after max_retries.
     """
     headers = {
-        "User-Agent": "Pharmacovigilance-FAERS-ETL/1.0 (Academic Research; Big Data Analytics ED547)"
+        "User-Agent": "Pharmacovigilance-FAERS-ETL/1.0 (Post-Marketing Surveillance Research)"
     }
     req = urllib.request.Request(manifest_url, headers=headers)
 
@@ -175,7 +175,7 @@ def download_file_with_progress(
         True if download succeeded, False otherwise.
     """
     headers = {
-        "User-Agent": "Pharmacovigilance-FAERS-ETL/1.0 (Academic Research; Big Data Analytics ED547)"
+        "User-Agent": "Pharmacovigilance-FAERS-ETL/1.0 (Post-Marketing Surveillance Research)"
     }
     temp_path = destination_path.with_suffix(".tmp")
 

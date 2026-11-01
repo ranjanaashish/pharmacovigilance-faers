@@ -37,7 +37,7 @@ def render_sidebar(signals_df: pd.DataFrame, reports_df: pd.DataFrame, signals_s
             <div style="padding: 0.5rem 0 1rem 0;">
                 <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.1em; color: #38BDF8; text-transform: uppercase;">Surveillance System</div>
                 <div style="font-size: 16px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.01em;">FAERS Registry Analytics</div>
-                <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">ED547 Big Data Core Engine</div>
+                <div style="font-size: 11px; color: #94A3B8; margin-top: 2px;">High-Throughput Analytics Engine</div>
             </div>
             """,
             unsafe_allow_html=True,
@@ -241,7 +241,7 @@ def main():
             <strong>Regulatory & Epidemiological Notice:</strong> Spontaneous adverse event reporting databases contain unverified 
             reports submitted by medical professionals, patients, and manufacturers. The presence of a safety signal or elevated PRR 
             establishes statistical disproportionality in reporting frequency and does not confirm biological causality. 
-            Developed for academic demonstration and research in Big Data Analytics (ED547).
+            Developed for large-scale pharmacovigilance surveillance and post-marketing signal detection research.
         </div>
         """,
         unsafe_allow_html=True,
