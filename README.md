@@ -29,35 +29,30 @@ Processing, cleansing, harmonizing, and analyzing this heterogeneous volume requ
 
 ## 2. High-Level System Architecture
 
-![High-Level System Architecture](docs/architecture.png)
-
-> [!NOTE]
-> **Data Provenance vs. Runtime Execution:** The OpenFDA FAERS API is contacted **only once** during initial batch acquisition (`data/download_faers.py`) to download raw quarterly JSON archives into the local data lake (`data/raw/`). All downstream distributed processing (PySpark ETL, PRR analytics) and the Streamlit clinical dashboard execute **100% locally and offline** against persistent Parquet datasets (`data/processed/`) and MongoDB with sub-millisecond latency, requiring **zero runtime API calls**.
-
 ```mermaid
 flowchart TD
-    subgraph S1["1. DATA INGESTION LAYER"]
-        D1["OpenFDA FAERS Bulk Archives<br/>(16M+ Quarterly JSON Reports)<br/><b>[One-Time Batch Ingestion]</b>"]
+    subgraph S1["1. DATA INGESTION LAYER (Module IV)"]
+        D1["OpenFDA FAERS API<br/>(Bulk Quarterly JSON / 16M+ Reports)"]
         DL["data/download_faers.py<br/>(HTTP Stream + Unzip)"]
-        RAW["Raw Landing Zone<br/>(HDFS / Local Data Lake: data/raw/)"]
+        RAW["Raw Landing Zone<br/>(HDFS / Local Data Lake)"]
         K_PROD["streaming/kafka_producer.py<br/>(Replay / Simulate Live Events)"]
         KAFKA["Apache Kafka<br/>Topic: faers-raw-events"]
         
-        D1 -->|One-time initial fetch| DL --> RAW
-        RAW -.->|Simulated live stream| K_PROD -.-> KAFKA
+        D1 --> DL --> RAW
+        RAW -.-> K_PROD -.-> KAFKA
     end
 
-    subgraph S2["2. DISTRIBUTED ETL & PROCESSING ENGINE"]
+    subgraph S2["2. DISTRIBUTED ETL & PROCESSING ENGINE (Module III & IV)"]
         INGEST["01_ingest.py<br/>• Schema Extraction<br/>• Multi-line JSON Parsing"]
         CLEAN["02_clean.py<br/>• Windowed Deduplication<br/>• Age Normalization (800-805)<br/>• Sex Code Standardization"]
         FLATTEN["03_flatten.py<br/>• Explode patient.drug[]<br/>• Explode patient.reaction[]<br/>• Generic Name Resolution"]
-        PARQUET["Optimized Storage<br/>(Snappy Parquet: data/processed/)"]
+        PARQUET["Optimized Storage<br/>(Snappy-Compressed Parquet)"]
 
-        RAW -->|Offline batch read| INGEST --> CLEAN --> FLATTEN --> PARQUET
+        RAW --> INGEST --> CLEAN --> FLATTEN --> PARQUET
         KAFKA -.-> SPARK_STREAM["spark_streaming_consumer.py<br/>(Micro-batch Streaming)"] -.-> PARQUET
     end
 
-    subgraph S3["3. STATISTICAL SIGNAL ENGINE"]
+    subgraph S3["3. STATISTICAL SIGNAL ENGINE (Module III)"]
         PRR_CALC["analytics/prr_calculator.py<br/>• 2x2 Contingency Matrix<br/>• PRR Ratio & Chi-Square (χ²)<br/>• Threshold: PRR ≥ 2, n ≥ 3, χ² ≥ 4"]
         DEMO["analytics/demographic_analysis.py<br/>• Age & Gender Distributions<br/>• Underrepresented Cohort Detection"]
         FATAL["analytics/fatality_analysis.py<br/>• Mortality Rate per Pair<br/>• Lethal Signal Ranking"]
@@ -67,12 +62,12 @@ flowchart TD
         PARQUET --> FATAL
     end
 
-    subgraph S4["4. DUAL PERSISTENCE & WAREHOUSING LAYER"]
+    subgraph S4["4. DUAL PERSISTENCE & WAREHOUSING LAYER (Module II & V)"]
         direction TB
-        subgraph OLAP["OLAP Warehouse"]
+        subgraph OLAP["OLAP Warehouse (Module V)"]
             HIVE["Apache Hive (pharma_db)<br/>• faers_events (Fact)<br/>• drug_reaction_signals<br/>• drug_summary"]
         end
-        subgraph OLTP["NoSQL Serving Store"]
+        subgraph OLTP["NoSQL Serving Store (Module II)"]
             MONGO["MongoDB (pharmacovigilance)<br/>• drug_signals Collection<br/>• Indexed on drug_name & PRR"]
         end
 
@@ -92,8 +87,8 @@ flowchart TD
         UI3["03_top_signals.py<br/>(Global Prioritization Matrix)"]
         UI4["04_demographics.py<br/>(Vulnerable Cohort Blind Spots)"]
 
-        MONGO -->|Sub-millisecond query| LOADER
-        HIVE -.->|Warehouse lookup| LOADER
+        MONGO --> LOADER
+        HIVE -.-> LOADER
         LOADER --> UI1
         LOADER --> UI2
         LOADER --> UI3
@@ -186,7 +181,6 @@ pharmacovigilance-faers/
 |   |-- raw/                     # Raw OpenFDA FAERS JSON archives (git-ignored)
 |   |-- processed/               # Standardized Parquet partitions (signals & reports)
 |-- docs/                       # Technical specifications & documentation
-|   |-- architecture.png        # High-level system architecture diagram
 |   |-- data_dictionary.md       # ICH E2B & MedDRA regulatory data dictionary
 |   |-- prr_methodology.md       # Mathematical & statistical derivation of Evans criteria
 |-- etl/                        # Distributed Data Ingestion & Transformation
