@@ -1,0 +1,69 @@
+# Data directories (FAERS raw downloads are ignored due to multi-GB size)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/reports/
+data/processed/signals/
+data/processed/*.crc
+!data/processed/.gitkeep
+!data/processed/*.parquet
+
+# Python bytecode and environments
+*.py[cod]
+__pycache__/
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Packaging and distribution
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+*-checkpoint.ipynb
+
+# Environment variables and secrets
+.env
+.env.local
+.env.*.local
+
+# Spark & Hive metastore files
+spark-warehouse/
+metastore_db/
+derby.log
+*.jar
+*.lck
+
+# Logs and runtime metadata
+*.log
+logs/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

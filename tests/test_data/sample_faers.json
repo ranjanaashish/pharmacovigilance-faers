@@ -1,0 +1,190 @@
+{
+  "meta": {
+    "disclaimer": "Do not use to determine whether a product caused the event.",
+    "terms": "https://open.fda.gov/terms/",
+    "license": "https://open.fda.gov/license/",
+    "last_updated": "2023-10-31",
+    "results": {
+      "skip": 0,
+      "limit": 5,
+      "total": 5
+    }
+  },
+  "results": [
+    {
+      "safetyreportid": "10001",
+      "safetyreportversion": "1",
+      "receivedate": "20230101",
+      "occurcountry": "US",
+      "serious": "1",
+      "seriousnessdeath": "0",
+      "seriousnesshospitalization": "1",
+      "seriousnesslifethreatening": "0",
+      "patient": {
+        "patientonsetage": "45",
+        "patientonsetageunit": "801",
+        "patientsex": "1",
+        "patientweight": "80.5",
+        "drug": [
+          {
+            "medicinalproduct": "AVANDIA",
+            "drugcharacterization": "1",
+            "drugindication": "TYPE 2 DIABETES MELLITUS",
+            "openfda": {
+              "generic_name": ["ROSIGLITAZONE"],
+              "brand_name": ["AVANDIA"]
+            }
+          }
+        ],
+        "reaction": [
+          {
+            "reactionmeddrapt": "MYOCARDIAL INFARCTION",
+            "reactionoutcome": "2"
+          }
+        ]
+      }
+    },
+    {
+      "safetyreportid": "10001",
+      "safetyreportversion": "2",
+      "receivedate": "20230201",
+      "occurcountry": "US",
+      "serious": "1",
+      "seriousnessdeath": "1",
+      "seriousnesshospitalization": "1",
+      "seriousnesslifethreatening": "1",
+      "patient": {
+        "patientonsetage": "45",
+        "patientonsetageunit": "801",
+        "patientsex": "1",
+        "patientweight": "80.5",
+        "drug": [
+          {
+            "medicinalproduct": "AVANDIA",
+            "drugcharacterization": "1",
+            "drugindication": "TYPE 2 DIABETES MELLITUS",
+            "openfda": {
+              "generic_name": ["ROSIGLITAZONE"],
+              "brand_name": ["AVANDIA"]
+            }
+          },
+          {
+            "medicinalproduct": "GLUCOPHAGE",
+            "drugcharacterization": "3",
+            "drugindication": "TYPE 2 DIABETES MELLITUS",
+            "openfda": {
+              "generic_name": ["METFORMIN"],
+              "brand_name": ["GLUCOPHAGE"]
+            }
+          }
+        ],
+        "reaction": [
+          {
+            "reactionmeddrapt": "MYOCARDIAL INFARCTION",
+            "reactionoutcome": "5"
+          },
+          {
+            "reactionmeddrapt": "CHEST PAIN",
+            "reactionoutcome": "2"
+          }
+        ]
+      }
+    },
+    {
+      "safetyreportid": "10002",
+      "safetyreportversion": "1",
+      "receivedate": "20230315",
+      "occurcountry": "CA",
+      "serious": "1",
+      "seriousnessdeath": "0",
+      "seriousnesshospitalization": "1",
+      "seriousnesslifethreatening": "0",
+      "patient": {
+        "patientonsetage": "6",
+        "patientonsetageunit": "800",
+        "patientsex": "2",
+        "patientweight": "65.0",
+        "drug": [
+          {
+            "medicinalproduct": "LIPITOR 20MG",
+            "drugcharacterization": "1",
+            "drugindication": "HYPERCHOLESTEROLEMIA",
+            "openfda": {
+              "generic_name": ["ATORVASTATIN"],
+              "brand_name": ["LIPITOR"]
+            }
+          }
+        ],
+        "reaction": [
+          {
+            "reactionmeddrapt": "RHABDOMYOLYSIS",
+            "reactionoutcome": "2"
+          }
+        ]
+      }
+    },
+    {
+      "safetyreportid": "10003",
+      "safetyreportversion": "1",
+      "receivedate": "20230410",
+      "occurcountry": "GB",
+      "serious": "1",
+      "seriousnessdeath": "0",
+      "seriousnesshospitalization": "0",
+      "seriousnesslifethreatening": "1",
+      "patient": {
+        "patientonsetage": "18",
+        "patientonsetageunit": "802",
+        "patientsex": "2",
+        "patientweight": "12.0",
+        "drug": [
+          {
+            "medicinalproduct": "AMOXIL",
+            "drugcharacterization": "1",
+            "drugindication": "RESPIRATORY TRACT INFECTION",
+            "openfda": {
+              "generic_name": ["AMOXICILLIN"],
+              "brand_name": ["AMOXIL"]
+            }
+          }
+        ],
+        "reaction": [
+          {
+            "reactionmeddrapt": "ANAPHYLACTIC SHOCK",
+            "reactionoutcome": "1"
+          }
+        ]
+      }
+    },
+    {
+      "safetyreportid": "10004",
+      "safetyreportversion": "1",
+      "receivedate": "20230501",
+      "occurcountry": null,
+      "serious": "2",
+      "seriousnessdeath": null,
+      "seriousnesshospitalization": "0",
+      "seriousnesslifethreatening": "0",
+      "patient": {
+        "patientonsetage": null,
+        "patientonsetageunit": null,
+        "patientsex": "0",
+        "patientweight": null,
+        "drug": [
+          {
+            "medicinalproduct": "ASPIRIN 81MG",
+            "drugcharacterization": "2",
+            "drugindication": null,
+            "openfda": null
+          }
+        ],
+        "reaction": [
+          {
+            "reactionmeddrapt": "NAUSEA",
+            "reactionoutcome": null
+          }
+        ]
+      }
+    }
+  ]
+}
