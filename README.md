@@ -30,7 +30,7 @@ Processing, cleansing, harmonizing, and analyzing this heterogeneous volume requ
 ## 2. High-Level System Architecture
 
 ```mermaid
-flowchart TD
+flowchart LR
     subgraph S1["1. DATA INGESTION LAYER (Module IV)"]
         D1["OpenFDA FAERS API<br/>(Bulk Quarterly JSON / 16M+ Reports)"]
         DL["data/download_faers.py<br/>(HTTP Stream + Unzip)"]
