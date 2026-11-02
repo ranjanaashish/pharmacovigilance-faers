@@ -67,3 +67,13 @@ htmlcov/
 *.swo
 .DS_Store
 Thumbs.db
+
+# LaTeX build artifacts
+presentation/*.aux
+presentation/*.log
+presentation/*.nav
+presentation/*.out
+presentation/*.snm
+presentation/*.toc
+presentation/*.vrb
+presentation/*.synctex.gz

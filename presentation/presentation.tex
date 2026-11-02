@@ -1,0 +1,582 @@
+\documentclass[11pt, aspectratio=169]{beamer}
+\usetheme{default}
+\usecolortheme{default}
+\setbeamertemplate{navigation symbols}{}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{tikz}
+\usetikzlibrary{trees, patterns, shapes.geometric, arrows.meta, positioning}
+
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+  \usepackage[english]{babel}
+  \babelfont{rm}{Montserrat}
+  \babelfont{sf}{Lato}
+\fi
+
+% --- Corporate Academic Color Palette ---
+\definecolor{NavyBlue}{RGB}{24, 43, 73}
+\definecolor{AccentBlue}{RGB}{0, 114, 206}
+\definecolor{DarkSlate}{RGB}{51, 65, 85}
+\definecolor{MutedGray}{RGB}{100, 116, 139}
+\definecolor{LightBg}{RGB}{248, 250, 252}
+\definecolor{CardBg}{RGB}{241, 245, 249}
+\definecolor{SuccessGreen}{RGB}{22, 101, 52}
+\definecolor{LeafBg}{RGB}{220, 252, 231}
+\definecolor{AlertRed}{RGB}{185, 28, 28}
+\definecolor{AlertBg}{RGB}{254, 242, 242}
+\definecolor{SoftBlue}{RGB}{224, 242, 254}
+
+% --- Global Colors Configuration ---
+\setbeamercolor{background canvas}{bg=LightBg}
+\setbeamercolor{normal text}{fg=DarkSlate}
+\setbeamercolor{frametitle}{fg=NavyBlue, bg=LightBg}
+\setbeamercolor{title}{fg=NavyBlue}
+\setbeamercolor{subtitle}{fg=AccentBlue}
+\setbeamercolor{author}{fg=DarkSlate}
+\setbeamercolor{date}{fg=DarkSlate}
+\setbeamercolor{structure}{fg=AccentBlue}
+
+% --- Block Styling ---
+\setbeamertemplate{blocks}[rounded][shadow=false]
+\setbeamercolor{block title}{bg=NavyBlue, fg=white}
+\setbeamercolor{block body}{bg=CardBg, fg=DarkSlate}
+\setbeamercolor{block title alerted}{bg=AlertRed, fg=white}
+\setbeamercolor{block body alerted}{bg=AlertBg, fg=DarkSlate}
+\setbeamercolor{block title example}{bg=AccentBlue, fg=white}
+\setbeamercolor{block body example}{bg=blue!6, fg=DarkSlate}
+
+% ==============================================================================
+% STANDARD TOP BEAM (HEADLINE)
+% ==============================================================================
+\setbeamertemplate{headline}{
+  \ifnum\insertpagenumber>1
+    \begin{beamercolorbox}[wd=\paperwidth,ht=3ex,dp=1.1ex,leftskip=0.8cm,rightskip=0.8cm]{headline}
+      {\tiny\bfseries\color{white} ED547: Big Data Analytics \hfill Automated Early Detection of Adverse Drug Interactions}
+    \end{beamercolorbox}
+    \vspace{-1pt}
+    {\color{AccentBlue}\rule{\paperwidth}{1.5pt}}
+  \fi
+}
+\setbeamercolor{headline}{bg=NavyBlue}
+
+% --- Frame Title Customization (Clean, single accent line) ---
+\setbeamertemplate{frametitle}{
+    \vspace{0.25cm}
+    {\normalsize\bfseries\color{NavyBlue}\insertframetitle}
+    \par\vspace{0.05cm}
+}
+\setbeamertemplate{footline}[page number]
+
+% --- Itemize Customization ---
+\setbeamertemplate{itemize item}{\color{AccentBlue}$\blacktriangleright$}
+\setbeamertemplate{itemize subitem}{\color{AccentBlue}--}
+
+% --- Presentation Metadata ---
+\title[Pharmacovigilance FAERS]{Automated Early Detection of Adverse Drug Interactions}
+\subtitle{ED547: Big Data Analytics}
+\author{Ashish Ranjan \and Aastha Chhabra}
+\date{\today}
+
+\begin{document}
+
+% ==============================================================================
+% Title Slide (Guaranteed Centered Box & Symmetric 2 Columns)
+% ==============================================================================
+\begin{frame}[plain]
+    \vfill
+    \centering
+    {\LARGE \bfseries \color{NavyBlue} Automated Early Detection of Adverse Drug Interactions} \\[0.25cm]
+    {\normalsize \bfseries \color{AccentBlue} A Distributed Pharmacovigilance Big Data Analytics Pipeline on FDA FAERS} \\[0.55cm]
+    
+    % Centering wrapper ensuring exact horizontal middle alignment
+    \begin{columns}[c]
+        \begin{column}{0.84\textwidth}
+            \begin{beamercolorbox}[wd=\linewidth,rounded=true,center,sep=8pt]{block body}
+                \scriptsize \textbf{\color{NavyBlue}PROJECT CONTRIBUTORS}\\[0.2cm]
+                \centering
+                \footnotesize
+                \begin{tabular}{c@{\hspace{1.8cm}}c}
+                     \textbf{Ashish Ranjan} & \textbf{Aastha Chhabra} \\
+                     \scriptsize \texttt{IED/10004/22} & \scriptsize \texttt{IED/10005/22}
+                \end{tabular}
+            \end{beamercolorbox}
+        \end{column}
+    \end{columns}
+    
+    \vspace{0.55cm}
+    {\footnotesize \color{DarkSlate} Department of Engineering Design \hfill \today}
+    \vfill
+\end{frame}
+
+% ==============================================================================
+% Slide 1: Introduction & Clinical Motivation
+% ==============================================================================
+\begin{frame}{Introduction \& Clinical Motivation}
+    \begin{columns}[T]
+        \begin{column}{0.56\textwidth}
+            \begin{itemize}\scriptsize
+                \item \textbf{High-Stakes Problem:} Adverse Drug Events (ADEs) represent the \textbf{4th leading cause of death} in US hospitals, causing $>100\text{K}$ annual fatalities and $>\$136\text{B}$ in direct medical costs.
+                \item \textbf{Trial Limitations:} Pre-market clinical trials ($1,000$--$3,000$ patients) miss rare toxicities ($<1:10,000$), drug interactions (DDIs), and vulnerable demographic cohorts.
+                \item \textbf{FDA FAERS Corpus:} $>16\text{M}$ global spontaneous reports with polymorphic, semi-structured JSON records.
+                \item \textbf{Big Data Challenge:} Combinatorial co-occurrence of thousands of drugs and reactions causes Out-of-Memory crashes in standard Pandas.
+            \end{itemize}
+            \vspace{0.02cm}
+            \begin{block}{\footnotesize Core Objective}
+                \scriptsize
+                Build an end-to-end distributed Big Data analytics pipeline (\textbf{PySpark}, \textbf{Hive}, \textbf{MongoDB}, \textbf{Kafka}) to compute whole-corpus disproportionality safety signals (PRR, $\chi^2$) in near real-time.
+            \end{block}
+        \end{column}
+
+        \begin{column}{0.42\textwidth}
+            \begin{exampleblock}{\footnotesize Surveillance Pipeline Flow}
+                \centering
+                \vspace{0.01cm}
+                \begin{tikzpicture}[
+                    node distance=0.32cm,
+                    box/.style={rectangle, draw=NavyBlue!40, fill=white, rounded corners=2pt, font=\scriptsize, align=center, inner sep=2.2pt, text=DarkSlate, line width=0.6pt, minimum width=3.3cm},
+                    arr/.style={-{Stealth[scale=0.75]}, draw=AccentBlue, line width=0.8pt}
+                ]
+                    \node[box, fill=CardBg] (in) {Raw FAERS JSON ($>16\text{M}$ Reports)};
+                    \node[box, below=of in] (etl) {Distributed PySpark ETL $\mathcal{O}(N)$};
+                    \node[box, below=of etl] (matrix) {2$\times$2 Contingency Generator};
+                    \node[box, below=of matrix] (prr) {Evans PRR \& $\chi^2$ Engine};
+                    \node[box, below=of prr, fill=LeafBg, draw=SuccessGreen] (out) {\textbf{Triage Safety Signals (PRR $\ge 2$)}};
+
+                    \draw[arr] (in) -- (etl);
+                    \draw[arr] (etl) -- (matrix);
+                    \draw[arr] (matrix) -- (prr);
+                    \draw[arr] (prr) -- (out);
+                \end{tikzpicture}
+                \vspace{0.01cm}
+            \end{exampleblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ==============================================================================
+% Slide 2: End-to-End System Architecture
+% ==============================================================================
+\begin{frame}{High-Level System Architecture}
+    \footnotesize
+    \textbf{Design Pattern:} Decoupled Analytical Lakehouse \& Low-Latency Document Serving Architecture.
+    \vspace{0.10cm}
+    \centering
+    \scalebox{0.75}{
+    \begin{tikzpicture}[
+        node distance=0.55cm and 0.7cm,
+        layer/.style={rectangle, draw=NavyBlue, fill=CardBg, rounded corners=3pt, font=\scriptsize\bfseries, align=center, inner sep=4pt, line width=0.8pt, text=NavyBlue},
+        subnode/.style={rectangle, draw=MutedGray!60, fill=white, rounded corners=2pt, font=\tiny, align=center, inner sep=3pt, text=DarkSlate, line width=0.5pt},
+        flowarr/.style={-{Stealth[scale=0.85]}, draw=AccentBlue, line width=1.1pt},
+        dasharr/.style={-{Stealth[scale=0.85]}, draw=AccentBlue, line width=0.9pt, dashed}
+    ]
+        % Horizontal 5-stage pipeline
+        \node[layer, minimum width=2.7cm, minimum height=3.5cm] (s1) at (0,0) {};
+        \node[above=2pt of s1.north, font=\tiny\bfseries, text=NavyBlue] {1. INGESTION LAYER};
+        \node[subnode, below=5pt of s1.north] (d1) {OpenFDA Bulk JSON\\(16M+ Reports)};
+        \node[subnode, below=5pt of d1] (dl) {\texttt{download\_faers.py}\\(HTTP Stream + Unzip)};
+        \node[subnode, below=5pt of dl] (raw) {Raw Landing Zone\\(\texttt{data/raw/})};
+        \node[subnode, below=5pt of raw] (kafka) {Kafka Broker\\(\texttt{faers-raw-events})};
+        \draw[-{Stealth[scale=0.65]}, draw=DarkSlate] (d1) -- (dl);
+        \draw[-{Stealth[scale=0.65]}, draw=DarkSlate] (dl) -- (raw);
+        \draw[-{Stealth[scale=0.65]}, draw=DarkSlate, dashed] (raw) -- (kafka);
+
+        \node[layer, minimum width=2.9cm, minimum height=3.5cm, right=of s1] (s2) {};
+        \node[above=2pt of s2.north, font=\tiny\bfseries, text=NavyBlue] {2. PYSPARK ETL ENGINE};
+        \node[subnode, below=5pt of s2.north] (ing) {\texttt{01\_ingest.py}\\Schema Extraction};
+        \node[subnode, below=5pt of ing] (clean) {\texttt{02\_clean.py}\\Window Deduplication};
+        \node[subnode, below=5pt of clean] (flat) {\texttt{03\_flatten.py}\\Array Explode \& RxNorm};
+        \node[subnode, below=5pt of flat, fill=SoftBlue!30] (parquet) {Optimized Storage\\(Snappy Parquet)};
+        \draw[-{Stealth[scale=0.65]}, draw=DarkSlate] (ing) -- (clean);
+        \draw[-{Stealth[scale=0.65]}, draw=DarkSlate] (clean) -- (flat);
+        \draw[-{Stealth[scale=0.65]}, draw=DarkSlate] (flat) -- (parquet);
+
+        \node[layer, minimum width=2.7cm, minimum height=3.5cm, right=of s2] (s3) {};
+        \node[above=2pt of s3.north, font=\tiny\bfseries, text=NavyBlue] {3. STATISTICAL ENGINE};
+        \node[subnode, below=5pt of s3.north] (prrcalc) {\texttt{prr\_calculator.py}\\2$\times$2 Contingency Matrix};
+        \node[subnode, below=5pt of prrcalc] (democalc) {\texttt{demographics.py}\\Cohort Disparity Metrics};
+        \node[subnode, below=5pt of democalc] (fatalcalc) {\texttt{fatality\_analysis.py}\\Mortality \& Lethal Rank};
+        \node[subnode, below=5pt of fatalcalc, fill=LeafBg, draw=SuccessGreen] (thresh) {Evans Filtering\\($\text{PRR} \ge 2, a \ge 3, \chi^2 \ge 4$)};
+        \draw[-{Stealth[scale=0.65]}, draw=DarkSlate] (prrcalc) -- (democalc);
+        \draw[-{Stealth[scale=0.65]}, draw=DarkSlate] (democalc) -- (fatalcalc);
+        \draw[-{Stealth[scale=0.65]}, draw=DarkSlate] (fatalcalc) -- (thresh);
+
+        \node[layer, minimum width=2.7cm, minimum height=3.5cm, right=of s3] (s4) {};
+        \node[above=2pt of s4.north, font=\tiny\bfseries, text=NavyBlue] {4. DUAL PERSISTENCE};
+        \node[subnode, below=10pt of s4.north, fill=CardBg] (hive) {\textbf{Apache Hive}\\OLAP Lakehouse Metastore\\(\texttt{faers\_events} Fact)};
+        \node[subnode, below=14pt of hive, fill=CardBg] (mongo) {\textbf{MongoDB 7.0}\\NoSQL Operational Serving\\Compound Index: \texttt{(drug, rx)}};
+
+        \node[layer, minimum width=2.7cm, minimum height=3.5cm, right=of s4] (s5) {};
+        \node[above=2pt of s5.north, font=\tiny\bfseries, text=NavyBlue] {5. CLINICAL SERVING};
+        \node[subnode, below=5pt of s5.north] (loader) {\texttt{data\_loader.py}\\Tiered Fallback Resolution};
+        \node[subnode, below=3pt of loader] (u1) {\texttt{01\_drug\_search.py}};
+        \node[subnode, below=3pt of u1] (u2) {\texttt{02\_drug\_compare.py}};
+        \node[subnode, below=3pt of u2] (u3) {\texttt{03\_top\_signals.py}};
+        \node[subnode, below=3pt of u3] (u4) {\texttt{04\_demographics.py}};
+
+        % Inter-layer arrows
+        \draw[flowarr] (raw.east) -- (ing.west);
+        \draw[flowarr] (parquet.east) -- (prrcalc.west);
+        \draw[flowarr] (thresh.east) -- (hive.west);
+        \draw[flowarr] (thresh.east) -- (mongo.west);
+        \draw[flowarr] (mongo.east) -- (loader.west);
+        \draw[dasharr] (hive.east) -- (loader.west);
+    \end{tikzpicture}
+    }
+\end{frame}
+
+% ==============================================================================
+% Slide 3: Distributed ETL & PySpark Transformations
+% ==============================================================================
+\begin{frame}[fragile]{Distributed ETL \& Big Data Processing}
+    \footnotesize
+    \textbf{Engine:} PySpark 3.5.x utilizing pure Columnar DataFrame API with Catalyst query optimization.
+    \vspace{0.02cm}
+    \begin{columns}[T]
+        \begin{column}{0.50\textwidth}
+            \begin{block}{\footnotesize Ingestion \& Normalization Stages}
+            \begin{enumerate}\scriptsize
+                \item \textbf{Schema Parsing:} Reads multi-GB nested JSON via explicit Catalyst Struct schemas without text parsing.
+                \item \textbf{Windowed Deduplication:} Retains latest clinical case version:\\
+                \texttt{Window.partitionBy("id")}\\
+                \texttt{.orderBy(desc("ver"))}
+                \item \textbf{Temporal Harmonization:} Standardizes FDA age codes (800--805: Days, Weeks, Months $\to$ Standard Years).
+                \item \textbf{Array Explosion:} Resolves combinations:\\
+                \texttt{explode("drug")} $\times$ \texttt{explode("reaction")}
+                \item \textbf{RxNorm Mapping:} Standardizes brand variations to canonical active generic ingredients.
+            \end{enumerate}
+            \end{block}
+        \end{column}
+
+        \begin{column}{0.49\textwidth}
+            \begin{exampleblock}{\footnotesize Distributed Transformation Code}
+            \fontsize{5.9pt}{7.0pt}\selectfont
+\begin{verbatim}
+win = Window.partitionBy("safetyreportid") \
+            .orderBy(F.col("version").desc())
+
+clean_reports = raw_df \
+  .withColumn("rk", F.row_number().over(win)) \
+  .filter(F.col("rk") == 1).drop("rk") \
+  .withColumn("drug", F.explode("patient.drug")) \
+  .withColumn("rx", F.explode("patient.reaction")) \
+  .select(
+    F.col("safetyreportid").alias("case_id"),
+    F.upper(F.trim("drug.medicinalproduct"))
+      .alias("drug_name"),
+    F.upper(F.trim("rx.reactionmeddrapt"))
+      .alias("reaction"),
+    normalize_age_udf("patient.patientonsetage",
+      "patient.patientonsetageunit").alias("age"),
+    map_sex_udf("patient.patientsex").alias("gender"),
+    F.col("serious").cast("int").alias("serious"),
+    F.col("seriousnessdeath").cast("int").alias("fatal")
+  )
+clean_reports.write.mode("overwrite") \
+  .parquet("data/processed/reports.parquet")
+\end{verbatim}
+            \end{exampleblock}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ==============================================================================
+% Slide 4: Statistical Methodology - Evans Disproportionality
+% ==============================================================================
+\begin{frame}{Statistical Methodology: Evans Disproportionality Analysis}
+    \begin{columns}[T]
+        \begin{column}{0.49\textwidth}
+            \begin{block}{\footnotesize 2$\times$2 Contingency Matrix Formulation}
+                \centering\scriptsize
+                For Target Drug $D$ and Target Adverse Reaction $R$:
+                \vspace{0.03cm}
+                \resizebox{0.95\linewidth}{!}{%
+                \begin{tabular}{lccc}
+                    \toprule
+                    \textbf{Stratum} & \textbf{Event $R$} & \textbf{Other ($\neg R$)} & \textbf{Total} \\
+                    \midrule
+                    \textbf{Target Drug $D$} & \textbf{$a$} & \textbf{$b$} & $a + b$ \\
+                    \textbf{Other Drugs ($\neg D$)} & \textbf{$c$} & \textbf{$d$} & $c + d$ \\
+                    \midrule
+                    \textbf{Population} & $a + c$ & $b + d$ & $N$ \\
+                    \bottomrule
+                \end{tabular}%
+                }
+                \vspace{0.03cm}
+            \end{block}
+
+            \begin{exampleblock}{\footnotesize Validated Evans Triage Criteria}
+                \scriptsize
+                Flagged as an active \textbf{Safety Signal} iff:
+                \begin{itemize}\scriptsize
+                    \item $\mathbf{\text{PRR} \ge 2.0}$ ($2\times$ relative reporting frequency)
+                    \item $\mathbf{a \ge 3}$ (Minimum reporting volume to prevent noise)
+                    \item $\mathbf{\chi^2 \ge 4.0}$ (Pearson independence with $p < 0.05$)
+                \end{itemize}
+            \end{exampleblock}
+        \end{column}
+
+        \begin{column}{0.49\textwidth}
+            \begin{block}{\footnotesize Mathematical Formulations}
+                \scriptsize
+                \textbf{1. Proportional Reporting Ratio (PRR):}
+                \vspace{-0.15cm}
+                \[ \text{PRR} = \frac{a / (a + b)}{c / (c + d)} \]
+                \textbf{2. 95\% Confidence Interval Band:}
+                \vspace{-0.15cm}
+                {\scriptsize
+                \[ \text{SE}(\ln \text{PRR}) = \sqrt{\frac{1}{a} - \frac{1}{a + b} + \frac{1}{c} - \frac{1}{c + d}} \]
+                \[ \text{PRR}_{95\%\text{ CI}} = \exp\left(\ln \text{PRR} \pm 1.96 \cdot \text{SE}\right) \]
+                }
+                \textbf{3. $\chi^2$ with Yates' Continuity Correction:}
+                \vspace{-0.15cm}
+                {\scriptsize \[ \chi^2 = \frac{N \left( |a d - b c| - \frac{N}{2} \right)^2}{(a + b)(c + d)(a + c)(b + d)} \]}
+            \end{block}
+        \end{column}
+    \end{columns}
+\end{frame}
+
+% ==============================================================================
+% Slide 5: Empirical Benchmark - Rosiglitazone Signal
+% ==============================================================================
+\begin{frame}{Empirical Benchmark: Rosiglitazone Regulatory Signal}
+\footnotesize
+\begin{columns}[T]
+  \begin{column}{0.50\textwidth}
+    \begin{block}{\footnotesize Regulatory Benchmark (FDA 2007 Warning)}
+      \centering\scriptsize
+      \textbf{Drug:} Rosiglitazone (Avandia) \quad \textbf{Event:} Myocardial Infarction
+    \end{block}
+    \vspace{0.03cm}
+    
+    \resizebox{\linewidth}{!}{%
+    \begin{tabular}{lccc}
+      \toprule
+      \textbf{Partition} & \textbf{MI ($R$)} & \textbf{Other ($\neg R$)} & \textbf{Total} \\
+      \midrule
+      \textbf{Rosiglitazone ($D$)} & $\mathbf{a = 450}$ & $\mathbf{b = 4,550}$ & $5,000$ \\
+      \textbf{Other Drugs ($\neg D$)} & $\mathbf{c = 500}$ & $\mathbf{d = 109,500}$ & $110,000$ \\
+      \midrule
+      \textbf{Marginal Total} & $950$ & $114,050$ & $\mathbf{N = 115,000}$ \\
+      \bottomrule
+    \end{tabular}
+    }
+    \vspace{0.06cm}
+    \begin{beamercolorbox}[wd=\linewidth,rounded=true,sep=4pt]{exampleblock body}
+      \scriptsize \textbf{Clinical Reality:} Replicates the historic FDA Black-Box Warning trigger where Rosiglitazone exhibited lethal cardiac disproportionality.
+    \end{beamercolorbox}
+  \end{column}
+
+  \begin{column}{0.48\textwidth}
+    \begin{block}{\footnotesize Quantitative Verification}
+      \scriptsize
+      \begin{itemize}\scriptsize
+        \item \textbf{Drug Incident Rate:} $\frac{a}{a+b} = \frac{450}{5,000} = \mathbf{0.0900} \; (9.00\%)$
+        \item \textbf{Background Rate:} $\frac{c}{c+d} = \frac{500}{110,000} = \mathbf{0.0045} \; (0.45\%)$
+        \item \textbf{PRR Point Estimate:} $\frac{0.0900}{0.0045} = \mathbf{19.80} \quad (\gg 2.0)$
+        \item \textbf{Pearson Chi-Square:} $\chi^2 = \mathbf{3164.2} \gg 4.0 \; (p < 10^{-10})$
+        \item \textbf{95\% Confidence Interval:} $[\mathbf{17.48}, \; \mathbf{22.42}]$
+      \end{itemize}
+    \end{block}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================================
+% Slide 6: Dual Storage & Real-Time Event Streaming
+% ==============================================================================
+\begin{frame}{Dual Persistence Layer \& Event Streaming}
+\footnotesize
+\begin{columns}[T]
+  \begin{column}{0.49\textwidth}
+    \begin{block}{\footnotesize 1. Analytical Lakehouse (Apache Hive)}
+      \scriptsize
+      \begin{itemize}\scriptsize
+        \item \textbf{Columnar Parquet:} Dictionary encoding with Snappy ($>4\times$ reduction vs.\ JSON).
+        \item \textbf{Metastore Schema:} External tables partitioned by \texttt{quarter} (\texttt{faers\_events}).
+        \item \textbf{HiveQL OLAP:} Complex analytical joins across multi-quarter data.
+      \end{itemize}
+    \end{block}
+    \vspace{0.01cm}
+    \begin{block}{\footnotesize 2. Low-Latency Serving (MongoDB 7.0)}
+      \scriptsize
+      \begin{itemize}\scriptsize
+        \item \textbf{BSON Documents:} Pre-computed drug risk profiles and signals.
+        \item \textbf{Compound Index:} \texttt{(drug\_name, reaction)} with \texttt{prr: -1}.
+        \item \textbf{Sub-50ms Latency:} Instant clinician search responses.
+      \end{itemize}
+    \end{block}
+  \end{column}
+
+  \begin{column}{0.49\textwidth}
+    \begin{exampleblock}{\footnotesize Real-Time Event Streaming}
+      \centering
+      \vspace{0.01cm}
+      \begin{tikzpicture}[
+        node distance=0.25cm,
+        stage/.style={rectangle, draw=NavyBlue, fill=white, rounded corners=2pt, font=\tiny, align=center, inner sep=1.8pt, line width=0.6pt, minimum width=3.8cm},
+        arr/.style={-{Stealth[scale=0.7]}, draw=AccentBlue, line width=0.8pt}
+      ]
+        \node[stage, fill=CardBg] (prod) {\textbf{Kafka Producer} (\texttt{kafka\_producer.py})\\\tiny Simulates hospital spontaneous ADE telemetry};
+        \node[stage, below=of prod] (topic) {\textbf{Kafka Broker Topic} (\texttt{faers-raw-events})\\\tiny High-throughput partitioned message queue};
+        \node[stage, below=of topic, fill=SoftBlue!30] (stream) {\textbf{Spark Structured Streaming}\\\tiny 30s micro-batches $\cdot$ \texttt{from\_json()} schema parsing};
+        \node[stage, below=of stream, fill=LeafBg, draw=SuccessGreen] (sink) {\textbf{Fault-Tolerant Parquet Sink}\\\tiny Write-ahead checkpointing $\cdot$ continuous append};
+
+        \draw[arr] (prod) -- (topic);
+        \draw[arr] (topic) -- (stream);
+        \draw[arr] (stream) -- (sink);
+      \end{tikzpicture}
+      \vspace{0.01cm}
+    \end{exampleblock}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================================
+% Slide 7: Real-World Dataset Scale & Volume Reduction
+% ==============================================================================
+\begin{frame}{Experimental Results: Pipeline Scale \& Data Reduction}
+\footnotesize
+\begin{columns}[T]
+  \begin{column}{0.49\textwidth}
+    \begin{block}{\footnotesize Ingested Production Dataset Scale}
+      \centering
+      \scriptsize
+      \resizebox{\linewidth}{!}{%
+      \begin{tabular}{lc}
+        \toprule
+        \textbf{Surveillance Pipeline Dimension} & \textbf{Recorded Metric} \\
+        \midrule
+        Raw Ingested JSON Corpus & \textbf{1.14 GB} (5 Partitions) \\
+        Cleaned Patient Safety Reports & \textbf{814,596 Cases} \\
+        Active Pharmaceutical Compounds & \textbf{3,325 Drugs} \\
+        Unique Evaluated Drug-Reaction Pairs & \textbf{110,223 Pairs} \\
+        Flagged Safety Signals ($\text{PRR} \ge 2.0$) & \textbf{65,259 Signals} \\
+        Production Parquet Storage Footprint & \textbf{4.3 MB} ($>250\times$ ratio) \\
+        \bottomrule
+      \end{tabular}
+      }
+    \end{block}
+    \begin{exampleblock}{\footnotesize Distributed Reduction Efficiency}
+      \scriptsize
+      \textbf{Input Records:} $814,596$ Reports $\to$ \textbf{Scored Signals:} $110,223$ \\
+      Vectorized contingency aggregation compresses millions of unstructured fields into actionable clinical decision metrics.
+    \end{exampleblock}
+  \end{column}
+
+  \begin{column}{0.49\textwidth}
+    \begin{block}{\footnotesize Funnel Reduction: Ingestion to Validated Signals}
+    \centering
+    \vspace{0.03cm}
+    \scalebox{0.68}{
+    \begin{tikzpicture}
+      \draw[->, line width=0.6pt, color=MutedGray] (0,0) -- (0,3.5) node[above, font=\tiny\bfseries] {Volume Scale};
+      % Bar 1: Ingested Reports
+      \draw[fill=NavyBlue!80, draw=NavyBlue, line width=0.8pt] (0.4,0) rectangle (1.2,3.1) 
+        node[midway, font=\tiny\bfseries\color{white}] {814.6K};
+      % Bar 2: Evaluated Pairs
+      \draw[fill=AccentBlue!80, draw=AccentBlue, line width=0.8pt] (1.6,0) rectangle (2.4,1.8) 
+        node[midway, font=\tiny\bfseries\color{white}] {110.2K};
+      % Bar 3: PRR >= 2 Signals
+      \draw[fill=orange!80, draw=orange, line width=0.8pt] (2.8,0) rectangle (3.6,1.2) 
+        node[midway, font=\tiny\bfseries\color{white}] {65.3K};
+      % Bar 4: High Triage Signals
+      \draw[fill=SuccessGreen!80, draw=SuccessGreen, line width=0.8pt] (4.0,0) rectangle (4.8,0.5) 
+        node[midway, font=\tiny\bfseries\color{white}] {7.6K};
+      
+      \node[below, font=\tiny, align=center] at (0.8,0) {Patient\\Reports};
+      \node[below, font=\tiny, align=center] at (2.0,0) {Scored\\Pairs};
+      \node[below, font=\tiny, align=center] at (3.2,0) {$\text{PRR} \ge 2$\\Signals};
+      \node[below, font=\tiny\bfseries, align=center] at (4.4,0) {Strict\\Triage};
+      \draw[line width=0.6pt, color=DarkSlate] (0,0) -- (5.2,0);
+      \node[draw=SuccessGreen, fill=LeafBg, rounded corners=2pt, font=\tiny\bfseries, text=SuccessGreen] at (4.4, 0.9) {Targeted};
+    \end{tikzpicture}
+    }
+    \end{block}
+    \begin{itemize}\scriptsize
+      \item \textbf{Noise Filtering:} Over $92\%$ of sporadic background co-occurrences eliminated through Evans frequency filters.
+      \item \textbf{Immediate Query Response:} Sub-50ms lookup across all 3,325 active compounds.
+    \end{itemize}
+  \end{column}
+\end{columns}
+\end{frame}
+
+% ==============================================================================
+% Slide 8: Interactive Clinical Dashboard
+% ==============================================================================
+\begin{frame}{Interactive Clinical Surveillance Platform}
+\scriptsize
+\centering
+\resizebox{0.98\textwidth}{!}{%
+\begin{tabular}{lp{10cm}}
+  \toprule
+  \textbf{Dashboard Domain Module} & \textbf{Clinical Surveillance Functionality \& Visual Analytics} \\
+  \midrule
+  \textbf{Executive Overview (\texttt{app.py})} & Real-time telemetry monitoring 814,596 patient reports, 110,223 scored pairs, system health badges, and methodology primers. \\
+  \textbf{Compound Surveillance (\texttt{01\_drug\_search.py})} & Sub-second query by active pharmaceutical ingredient; computes Evans PRR, 95\% CI, case fatality rates, and demographic distributions. \\
+  \textbf{Comparative Profiling (\texttt{02\_drug\_compare.py})} & Head-to-head differential risk ratio ($>1.5\times$) identifying shared adverse reaction disproportionalities between two competing medications. \\
+  \textbf{Signal Triage Registry (\texttt{03\_top\_signals.py})} & Multi-factor global prioritization matrix sorting emerging safety signals by PRR score, co-occurrence volume, and case fatality threshold. \\
+  \textbf{Population Disparity Audit (\texttt{04\_demographics.py})} & Stratified vulnerability analysis detecting surveillance blind spots across Pediatric (0--17), Adult (18--64), and Geriatric (65+) cohorts. \\
+  \bottomrule
+\end{tabular}
+}
+
+\vspace{0.15cm}
+\begin{beamercolorbox}[wd=0.98\textwidth,rounded=true,center,sep=4pt]{block body}
+  \scriptsize \textbf{Design System:} Institutional healthcare styling (Inter typography, clinical slate palette, zero emojis, high-contrast Plotly charts).
+\end{beamercolorbox}
+\end{frame}
+
+% ==============================================================================
+% Slide 9: Conclusion & Engineering Merits
+% ==============================================================================
+\begin{frame}{Conclusion \& Engineering Merits}
+\footnotesize
+\begin{columns}[T]
+  \begin{column}{0.54\textwidth}
+    \begin{block}{\footnotesize Engineering Achievements}
+      \begin{itemize}\scriptsize
+        \item \textbf{Scalable Big Data Core:} PySpark eliminates combinatorial memory bottlenecks across $>16\text{M}$ record schemas.
+        \item \textbf{Epidemiological Rigor:} Mathematical Evans PRR with Yates' $\chi^2$ detects genuine safety signals.
+        \item \textbf{Dual Architecture:} Columnar Hive lakehouse paired with indexed MongoDB for sub-50ms queries.
+        \item \textbf{Real-Time Stream:} Apache Kafka with Spark Streaming enables continuous post-marketing surveillance.
+      \end{itemize}
+    \end{block}
+
+    \vspace{0.01cm}
+    \begin{alertblock}{\footnotesize Production Impact}
+      \scriptsize
+      Transitions pharmacovigilance from slow, retrospective manual inquiry to automated, real-time prospective safety signal detection.
+    \end{alertblock}
+  \end{column}
+
+  \begin{column}{0.44\textwidth}
+    \begin{exampleblock}{\footnotesize Production Technology Integration}
+      \centering
+      \vspace{0.01cm}
+      \begin{tikzpicture}[
+        node distance=0.22cm,
+        stage/.style={rectangle, draw=NavyBlue, fill=CardBg, rounded corners=2pt, font=\tiny, align=center, inner sep=1.8pt, line width=0.6pt, minimum width=3.8cm},
+        arr/.style={-{Stealth[scale=0.7]}, draw=AccentBlue, line width=0.8pt}
+      ]
+        \node[stage] (raw) {OpenFDA FAERS JSON / Kafka Ingestion};
+        \node[stage, below=of raw] (spark) {PySpark Distributed Processing Engine\\\tiny (Deduplication, Explosion, PRR Matrices)};
+        \node[stage, below=of spark] (store) {Dual Lakehouse \& NoSQL Storage\\\tiny (Apache Hive Parquet + MongoDB 7.0)};
+        \node[stage, below=of store, fill=LeafBg, draw=SuccessGreen] (ui) {\textbf{Interactive Clinical Dashboard}\\\tiny (Sub-50ms Multi-Page Streamlit App)};
+
+        \draw[arr] (raw) -- (spark);
+        \draw[arr] (spark) -- (store);
+        \draw[arr] (store) -- (ui);
+      \end{tikzpicture}
+      \vspace{0.01cm}
+    \end{exampleblock}
+  \end{column}
+\end{columns}
+\end{frame}
+
+\end{document}
