@@ -51,13 +51,11 @@
 \setbeamercolor{block title example}{bg=AccentBlue, fg=white}
 \setbeamercolor{block body example}{bg=blue!6, fg=DarkSlate}
 
-% ==============================================================================
-% STANDARD TOP BEAM (HEADLINE)
-% ==============================================================================
+% --- Headline Customization ---
 \setbeamertemplate{headline}{
   \ifnum\insertpagenumber>1
     \begin{beamercolorbox}[wd=\paperwidth,ht=3ex,dp=1.1ex,leftskip=0.8cm,rightskip=0.8cm]{headline}
-      {\tiny\bfseries\color{white} ED547: Big Data Analytics \hfill Automated Early Detection of Adverse Drug Interactions}
+      {\tiny\bfseries\color{white} ED547: Big Data Analytics \hfill Pharmacovigilance and Drug Safety Analytics}
     \end{beamercolorbox}
     \vspace{-1pt}
     {\color{AccentBlue}\rule{\paperwidth}{1.5pt}}
@@ -65,11 +63,11 @@
 }
 \setbeamercolor{headline}{bg=NavyBlue}
 
-% --- Frame Title Customization (Clean, single accent line) ---
+% --- Frame Title Customization ---
 \setbeamertemplate{frametitle}{
-    \vspace{0.25cm}
+    \vspace{0.22cm}
     {\normalsize\bfseries\color{NavyBlue}\insertframetitle}
-    \par\vspace{0.05cm}
+    \par\vspace{0.04cm}
 }
 \setbeamertemplate{footline}[page number]
 
@@ -78,30 +76,29 @@
 \setbeamertemplate{itemize subitem}{\color{AccentBlue}--}
 
 % --- Presentation Metadata ---
-\title[Pharmacovigilance FAERS]{Automated Early Detection of Adverse Drug Interactions}
-\subtitle{ED547: Big Data Analytics}
+\title[Pharmacovigilance FAERS]{Post-Marketing Drug Safety Surveillance Platform}
+\subtitle{Distributed Big Data Analytics on FDA FAERS using PySpark, Hive, MongoDB \& Kafka}
 \author{Ashish Ranjan \and Aastha Chhabra}
 \date{\today}
 
 \begin{document}
 
 % ==============================================================================
-% Title Slide (Guaranteed Centered Box & Symmetric 2 Columns)
+% Title Slide
 % ==============================================================================
 \begin{frame}[plain]
     \vfill
     \centering
-    {\LARGE \bfseries \color{NavyBlue} Automated Early Detection of Adverse Drug Interactions} \\[0.25cm]
-    {\normalsize \bfseries \color{AccentBlue} A Distributed Pharmacovigilance Big Data Analytics Pipeline on FDA FAERS} \\[0.55cm]
+    {\LARGE \bfseries \color{NavyBlue} Pharmacovigilance and Drug Safety Analytics} \\[0.15cm]
+    {\normalsize \bfseries \color{AccentBlue} ED547: Big Data Analytics} \\[0.45cm]
     
-    % Centering wrapper ensuring exact horizontal middle alignment
     \begin{columns}[c]
-        \begin{column}{0.84\textwidth}
-            \begin{beamercolorbox}[wd=\linewidth,rounded=true,center,sep=8pt]{block body}
-                \scriptsize \textbf{\color{NavyBlue}PROJECT CONTRIBUTORS}\\[0.2cm]
+        \begin{column}{0.80\textwidth}
+            \begin{beamercolorbox}[wd=\linewidth,rounded=true,center,sep=7pt]{block body}
+                \scriptsize \textbf{\color{NavyBlue}PROJECT CONTRIBUTORS}\\[0.18cm]
                 \centering
                 \footnotesize
-                \begin{tabular}{c@{\hspace{1.8cm}}c}
+                \begin{tabular}{c@{\hspace{1.5cm}}c}
                      \textbf{Ashish Ranjan} & \textbf{Aastha Chhabra} \\
                      \scriptsize \texttt{IED/10004/22} & \scriptsize \texttt{IED/10005/22}
                 \end{tabular}
@@ -109,18 +106,18 @@
         \end{column}
     \end{columns}
     
-    \vspace{0.55cm}
-    {\footnotesize \color{DarkSlate} Department of Engineering Design \hfill \today}
+    \vspace{0.45cm}
+    {\footnotesize \color{DarkSlate} \today}
     \vfill
 \end{frame}
 
 % ==============================================================================
-% Slide 1: Introduction, Clinical Motive & Big Data Paradigm
+% Slide 1: Introduction, Clinical Motive & Big Data Paradigm (Page 2
 % ==============================================================================
-\begin{frame}{Introduction, Clinical Motivation \& Big Data Paradigm}
+\begin{frame}{Introduction}
     \begin{columns}[T]
         \begin{column}{0.48\textwidth}
-            \begin{block}{\footnotesize 1. Introduction \& FAERS Corpus}
+            \begin{block}{\footnotesize 1. FAERS Corpus}
                 \begin{itemize}\scriptsize
                     \item \textbf{Pharmacovigilance:} Systematic post-approval surveillance to detect unknown or rare adverse drug reactions.
                     \item \textbf{FDA FAERS System:} $>16\text{M}$ global spontaneous reports from physicians, consumers, and manufacturers.
@@ -150,11 +147,11 @@
 \end{frame}
 
 % ==============================================================================
-% Slide 2: End-to-End System Architecture
+% Slide 2: End-to-End System Architecture (Page 3)
 % ==============================================================================
 \begin{frame}{High-Level System Architecture}
     \footnotesize
-    \textbf{Architecture Paradigm:} Distributed Decoupled Lakehouse with Real-Time Event Streaming \& Low-Latency Serving.
+
     \vspace{0.10cm}
     \centering
     \resizebox{0.99\linewidth}{!}{%
@@ -239,7 +236,7 @@
 % ==============================================================================
 \begin{frame}{Data Ingestion: Distributed Architecture \& BDA Methods}
 \footnotesize
-\textbf{Ingestion Paradigm:} Scalable Multi-Modal Extraction \& Real-Time Message Telemetry on OpenFDA FAERS.
+
 \vspace{0.08cm}
 \begin{columns}[T]
     \begin{column}{0.49\textwidth}
@@ -252,7 +249,6 @@
             \end{itemize}
         \end{block}
     \end{column}
-
     \begin{column}{0.49\textwidth}
         \begin{exampleblock}{\footnotesize 2. BDA Tools \& Platform Improvements}
             \begin{itemize}\scriptsize\setlength{\itemsep}{2.5pt}
@@ -419,7 +415,7 @@
 \end{frame}
 
 % ==============================================================================
-% Slide 7: Real-World Dataset Scale & Volume Reduction
+% Slide 7: Real-World Dataset Scale & Volume Reduction (Page 8)
 % ==============================================================================
 \begin{frame}{Experimental Results: Pipeline Scale \& Data Reduction}
 \footnotesize
@@ -484,35 +480,9 @@
 \end{frame}
 
 % ==============================================================================
-% Slide 8: Interactive Clinical Dashboard
+% Slide 8: Conclusion & Engineering Merits
 % ==============================================================================
-\begin{frame}{Interactive Clinical Surveillance Platform}
-\scriptsize
-\centering
-\resizebox{0.98\textwidth}{!}{%
-\begin{tabular}{lp{10cm}}
-  \toprule
-  \textbf{Dashboard Domain Module} & \textbf{Clinical Surveillance Functionality \& Visual Analytics} \\
-  \midrule
-  \textbf{Executive Overview (\texttt{app.py})} & Real-time telemetry monitoring 814,596 patient reports, 110,223 scored pairs, system health badges, and methodology primers. \\
-  \textbf{Compound Surveillance (\texttt{01\_drug\_search.py})} & Sub-second query by active pharmaceutical ingredient; computes Evans PRR, 95\% CI, case fatality rates, and demographic distributions. \\
-  \textbf{Comparative Profiling (\texttt{02\_drug\_compare.py})} & Head-to-head differential risk ratio ($>1.5\times$) identifying shared adverse reaction disproportionalities between two competing medications. \\
-  \textbf{Signal Triage Registry (\texttt{03\_top\_signals.py})} & Multi-factor global prioritization matrix sorting emerging safety signals by PRR score, co-occurrence volume, and case fatality threshold. \\
-  \textbf{Population Disparity Audit (\texttt{04\_demographics.py})} & Stratified vulnerability analysis detecting surveillance blind spots across Pediatric (0--17), Adult (18--64), and Geriatric (65+) cohorts. \\
-  \bottomrule
-\end{tabular}
-}
-
-\vspace{0.15cm}
-\begin{beamercolorbox}[wd=0.98\textwidth,rounded=true,center,sep=4pt]{block body}
-  \scriptsize \textbf{Design System:} Institutional healthcare styling (Inter typography, clinical slate palette, zero emojis, high-contrast Plotly charts).
-\end{beamercolorbox}
-\end{frame}
-
-% ==============================================================================
-% Slide 9: Conclusion & Engineering Merits
-% ==============================================================================
-\begin{frame}{Conclusion \& Engineering Merits}
+\begin{frame}{Conclusion}
 \footnotesize
 \begin{columns}[T]
   \begin{column}{0.54\textwidth}
