@@ -115,45 +115,35 @@
 \end{frame}
 
 % ==============================================================================
-% Slide 1: Introduction & Clinical Motivation
+% Slide 1: Introduction, Clinical Motive & Big Data Paradigm
 % ==============================================================================
-\begin{frame}{Introduction \& Clinical Motivation}
+\begin{frame}{Introduction, Clinical Motivation \& Big Data Paradigm}
     \begin{columns}[T]
-        \begin{column}{0.56\textwidth}
-            \begin{itemize}\scriptsize
-                \item \textbf{High-Stakes Problem:} Adverse Drug Events (ADEs) represent the \textbf{4th leading cause of death} in US hospitals, causing $>100\text{K}$ annual fatalities and $>\$136\text{B}$ in direct medical costs.
-                \item \textbf{Trial Limitations:} Pre-market clinical trials ($1,000$--$3,000$ patients) miss rare toxicities ($<1:10,000$), drug interactions (DDIs), and vulnerable demographic cohorts.
-                \item \textbf{FDA FAERS Corpus:} $>16\text{M}$ global spontaneous reports with polymorphic, semi-structured JSON records.
-                \item \textbf{Big Data Challenge:} Combinatorial co-occurrence of thousands of drugs and reactions causes Out-of-Memory crashes in standard Pandas.
-            \end{itemize}
-            \vspace{0.02cm}
-            \begin{block}{\footnotesize Core Objective}
-                \scriptsize
-                Build an end-to-end distributed Big Data analytics pipeline (\textbf{PySpark}, \textbf{Hive}, \textbf{MongoDB}, \textbf{Kafka}) to compute whole-corpus disproportionality safety signals (PRR, $\chi^2$) in near real-time.
+        \begin{column}{0.48\textwidth}
+            \begin{block}{\footnotesize 1. Introduction \& FAERS Corpus}
+                \begin{itemize}\scriptsize
+                    \item \textbf{Pharmacovigilance:} Systematic post-approval surveillance to detect unknown or rare adverse drug reactions.
+                    \item \textbf{FDA FAERS System:} $>16\text{M}$ global spontaneous reports from physicians, consumers, and manufacturers.
+                \end{itemize}
             \end{block}
+            
+            \vspace{0.02cm}
+            \begin{alertblock}{\footnotesize 2. Clinical Motivation}
+                \begin{itemize}\scriptsize
+                    \item \textbf{Mortality \& Cost:} Adverse Drug Events (ADEs) are the \textbf{4th leading cause of death} in US hospitals ($>100\text{K}$ deaths/yr, $>\$136\text{B}$ cost).
+                    \item \textbf{Trial Limitations:} Pre-market trials ($1\text{K}$--$3\text{K}$ patients) miss rare toxicities ($<1:10,000$), drug interactions (DDIs), and vulnerable cohorts.
+                \end{itemize}
+            \end{alertblock}
         \end{column}
 
-        \begin{column}{0.42\textwidth}
-            \begin{exampleblock}{\footnotesize Surveillance Pipeline Flow}
-                \centering
-                \vspace{0.01cm}
-                \begin{tikzpicture}[
-                    node distance=0.32cm,
-                    box/.style={rectangle, draw=NavyBlue!40, fill=white, rounded corners=2pt, font=\scriptsize, align=center, inner sep=2.2pt, text=DarkSlate, line width=0.6pt, minimum width=3.3cm},
-                    arr/.style={-{Stealth[scale=0.75]}, draw=AccentBlue, line width=0.8pt}
-                ]
-                    \node[box, fill=CardBg] (in) {Raw FAERS JSON ($>16\text{M}$ Reports)};
-                    \node[box, below=of in] (etl) {Distributed PySpark ETL $\mathcal{O}(N)$};
-                    \node[box, below=of etl] (matrix) {2$\times$2 Contingency Generator};
-                    \node[box, below=of matrix] (prr) {Evans PRR \& $\chi^2$ Engine};
-                    \node[box, below=of prr, fill=LeafBg, draw=SuccessGreen] (out) {\textbf{Triage Safety Signals (PRR $\ge 2$)}};
-
-                    \draw[arr] (in) -- (etl);
-                    \draw[arr] (etl) -- (matrix);
-                    \draw[arr] (matrix) -- (prr);
-                    \draw[arr] (prr) -- (out);
-                \end{tikzpicture}
-                \vspace{0.01cm}
+        \begin{column}{0.48\textwidth}
+            \begin{exampleblock}{\footnotesize 3. How Big Data is Leveraged}
+                \begin{itemize}\scriptsize
+                    \item \textbf{Combinatorial Scale:} Multi-drug regimens $\times$ tens of thousands of reactions across $16\text{M}$ reports cause Out-of-Memory faults in single-node Pandas.
+                    \item \textbf{Distributed PySpark:} Vectorized Catalyst optimizer parses nested schemas, deduplicates windowed records, and computes whole-corpus matrices.
+                    \item \textbf{Dual Persistence:} Columnar Snappy Parquet on \textbf{Hive} for OLAP; indexed BSON on \textbf{MongoDB} for sub-50ms clinical lookups.
+                    \item \textbf{Streaming Telemetry:} Partitioned \textbf{Kafka} topics feed Spark Structured Streaming for prospective, continuous ADE triage.
+                \end{itemize}
             \end{exampleblock}
         \end{column}
     \end{columns}
