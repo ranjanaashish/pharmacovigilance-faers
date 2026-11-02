@@ -155,67 +155,81 @@
 \begin{frame}{High-Level System Architecture}
     \footnotesize
     \textbf{Architecture Paradigm:} Distributed Decoupled Lakehouse with Real-Time Event Streaming \& Low-Latency Serving.
-    \vspace{0.06cm}
+    \vspace{0.10cm}
     \centering
-    \resizebox{0.98\linewidth}{!}{%
+    \resizebox{0.99\linewidth}{!}{%
     \begin{tikzpicture}[
-        node distance=0.18cm,
-        layer/.style={rectangle, draw=NavyBlue!70, fill=CardBg!60, rounded corners=3pt, line width=0.7pt, inner sep=3pt},
-        header/.style={rectangle, fill=NavyBlue, text=white, font=\tiny\bfseries, rounded corners=2pt, minimum width=2.8cm, minimum height=0.40cm, align=center},
-        subnode/.style={rectangle, draw=MutedGray!40, fill=white, rounded corners=2pt, font=\tiny, align=center, inner sep=2.2pt, text=DarkSlate, minimum width=2.7cm, line width=0.5pt},
-        flowarr/.style={-{Stealth[scale=0.8]}, draw=AccentBlue, line width=1.0pt},
-        dasharr/.style={-{Stealth[scale=0.8]}, draw=AccentBlue, line width=0.8pt, dashed}
+        pillar/.style={rectangle, draw=NavyBlue!70, fill=white, rounded corners=4pt, line width=0.8pt, inner sep=5pt, text width=2.7cm, minimum height=4.1cm, align=left, top color=CardBg!50, bottom color=white},
+        flowarr/.style={-{Stealth[scale=0.9]}, draw=AccentBlue, line width=1.3pt}
     ]
-        % Layer 1: Ingestion & Streaming Layer
-        \node[layer, minimum width=2.9cm, minimum height=4.2cm] (s1) at (0,0) {};
-        \node[header] (h1) at (s1.north) [yshift=-6pt] {1. INGESTION \& STREAM};
-        \node[subnode, below=0.18cm of h1] (d1) {\textbf{OpenFDA FAERS JSON}\\\scriptsize $>$16M Polymorphic Records};
-        \node[subnode, below=of d1] (raw) {\textbf{Distributed Staging}\\\scriptsize Scalable Landing Zone / HDFS};
-        \node[subnode, below=of raw, fill=SoftBlue!40, draw=AccentBlue] (kafka) {\textbf{Apache Kafka Hub}\\\scriptsize Real-Time Telemetry Stream\\\scriptsize Topic: \texttt{faers-raw-events}};
+        % Pillar 1: Ingestion & Streaming
+        \node[pillar] (p1) at (0,0) {
+            \centering{\textbf{\color{NavyBlue}\scriptsize 1. INGESTION}}\\[-2pt]
+            {\color{AccentBlue}\rule{2.4cm}{0.8pt}}\par\vspace{3pt}
+            \begin{itemize}\tiny\setlength{\itemsep}{2pt}
+                \item \textbf{OpenFDA JSON:}\\$>$16M polymorphic cases
+                \item \textbf{Distributed Staging:}\\Scalable Data Lake / HDFS
+                \item \textbf{Apache Kafka:}\\Partitioned stream topic
+            \end{itemize}
+        };
 
-        % Layer 2: Distributed PySpark ETL Engine
-        \node[layer, minimum width=2.9cm, minimum height=4.2cm, right=0.38cm of s1] (s2) {};
-        \node[header] (h2) at (s2.north) [yshift=-6pt] {2. PYSPARK ETL CORE};
-        \node[subnode, below=0.18cm of h2] (ing) {\textbf{Catalyst Schema Typing}\\\scriptsize Direct StructType Extraction};
-        \node[subnode, below=of ing] (clean) {\textbf{Window Deduplication}\\\scriptsize Partition-Level Version Rank};
-        \node[subnode, below=of clean] (flat) {\textbf{Vectorized Explode}\\\scriptsize $M$ Drugs $\times$ $N$ Reactions};
-        \node[subnode, below=of flat, fill=CardBg, draw=NavyBlue!50] (parquet) {\textbf{Snappy Parquet Sink}\\\scriptsize Columnar Dictionary Encoded};
+        % Pillar 2: PySpark ETL Engine
+        \node[pillar, right=0.52cm of p1] (p2) {
+            \centering{\textbf{\color{NavyBlue}\scriptsize 2. PYSPARK ETL}}\\[-2pt]
+            {\color{AccentBlue}\rule{2.4cm}{0.8pt}}\par\vspace{3pt}
+            \begin{itemize}\tiny\setlength{\itemsep}{2pt}
+                \item \textbf{Catalyst Structs:}\\Direct schema parsing
+                \item \textbf{Deduplication:}\\Windowed version rank
+                \item \textbf{Vectorized Explode:}\\$M$ Drugs $\times$ $N$ Reactions
+                \item \textbf{Snappy Parquet:}\\Columnar compression sink
+            \end{itemize}
+        };
 
-        % Layer 3: Statistical Signal Engine
-        \node[layer, minimum width=2.9cm, minimum height=4.2cm, right=0.38cm of s2] (s3) {};
-        \node[header] (h3) at (s3.north) [yshift=-6pt] {3. STATISTICAL ENGINE};
-        \node[subnode, below=0.18cm of h3] (prrcalc) {\textbf{Contingency Generator}\\\scriptsize Whole-Corpus 2$\times$2 Group-By};
-        \node[subnode, below=of prrcalc] (democalc) {\textbf{Vectorized Evans PRR}\\\scriptsize Disproportionality \& Yates' $\chi^2$};
-        \node[subnode, below=of democalc] (fatalcalc) {\textbf{Stratified Slicing}\\\scriptsize Age Cohorts \& Fatality Rates};
-        \node[subnode, below=of fatalcalc, fill=LeafBg, draw=SuccessGreen] (thresh) {\textbf{Automated Triage Filter}\\\scriptsize $\text{PRR} \ge 2.0 \cdot a \ge 3 \cdot \chi^2 \ge 4$};
+        % Pillar 3: Statistical Signal Engine
+        \node[pillar, right=0.52cm of p2] (p3) {
+            \centering{\textbf{\color{NavyBlue}\scriptsize 3. SIGNAL ENGINE}}\\[-2pt]
+            {\color{AccentBlue}\rule{2.4cm}{0.8pt}}\par\vspace{3pt}
+            \begin{itemize}\tiny\setlength{\itemsep}{2pt}
+                \item \textbf{2$\times$2 Contingency:}\\Whole-corpus group-by
+                \item \textbf{Evans PRR:}\\Disproportionality ratio
+                \item \textbf{Yates' $\chi^2$ Test:}\\Significance ($p < 0.05$)
+                \item \textbf{Strict Triage:}\\$\text{PRR} \ge 2 \cdot a \ge 3 \cdot \chi^2 \ge 4$
+            \end{itemize}
+        };
 
-        % Layer 4: Dual Persistence Layer
-        \node[layer, minimum width=2.9cm, minimum height=4.2cm, right=0.38cm of s3] (s4) {};
-        \node[header] (h4) at (s4.north) [yshift=-6pt] {4. DUAL PERSISTENCE};
-        \node[subnode, below=0.28cm of h4, fill=NavyBlue!10, draw=NavyBlue!60] (hive) {\textbf{Apache Hive Lakehouse}\\\scriptsize Partitioned Metastore by Qtr\\\scriptsize Complex Multi-Table SQL Joins};
-        \node[subnode, below=0.42cm of hive, fill=LeafBg!40, draw=SuccessGreen] (mongo) {\textbf{MongoDB 7.0 Serving}\\\scriptsize Compound-Indexed BSON\\\scriptsize Point Queries: \texttt{(drug, rx)}};
+        % Pillar 4: Dual Persistence Layer
+        \node[pillar, right=0.52cm of p3] (p4) {
+            \centering{\textbf{\color{NavyBlue}\scriptsize 4. PERSISTENCE}}\\[-2pt]
+            {\color{AccentBlue}\rule{2.4cm}{0.8pt}}\par\vspace{3pt}
+            \begin{itemize}\tiny\setlength{\itemsep}{2pt}
+                \item \textbf{Apache Hive:}\\Partitioned lakehouse metastore for OLAP joins
+                \item \textbf{MongoDB 7.0:}\\Operational NoSQL BSON
+                \item \textbf{Compound Index:}\\(drug, rx) for $<$50ms latency
+            \end{itemize}
+        };
 
-        % Layer 5: Clinical Serving & Analytics UI
-        \node[layer, minimum width=2.9cm, minimum height=4.2cm, right=0.38cm of s4] (s5) {};
-        \node[header] (h5) at (s5.north) [yshift=-6pt] {5. CLINICAL SERVING};
-        \node[subnode, below=0.18cm of h5] (loader) {\textbf{Dual Query Router}\\\scriptsize NoSQL Fast-Path + Lake Fallback};
-        \node[subnode, below=of loader] (u1) {\textbf{Compound Profiler}\\\scriptsize Sub-50ms Signal Retrieval};
-        \node[subnode, below=of u1] (u2) {\textbf{Comparative DDI}\\\scriptsize Differential Risk Analytics};
-        \node[subnode, below=of u2, fill=CardBg, draw=NavyBlue!40] (u3) {\textbf{Population Disparities}\\\scriptsize Cohort Vulnerability Audits};
+        % Pillar 5: Clinical Analytics UI
+        \node[pillar, right=0.52cm of p4] (p5) {
+            \centering{\textbf{\color{NavyBlue}\scriptsize 5. CLINICAL SERVING}}\\[-2pt]
+            {\color{AccentBlue}\rule{2.4cm}{0.8pt}}\par\vspace{3pt}
+            \begin{itemize}\tiny\setlength{\itemsep}{2pt}
+                \item \textbf{Dual Query Router:}\\NoSQL fast-path + lake
+                \item \textbf{Compound Profiler:}\\Sub-50ms signal lookup
+                \item \textbf{Comparative DDI:}\\Head-to-head risk ratio
+                \item \textbf{Disparity Audits:}\\Vulnerable cohort alerts
+            \end{itemize}
+        };
 
-        % Inter-layer arrows
-        \draw[flowarr] (raw.east) -- (ing.west);
-        \draw[dasharr] (kafka.east) -- (flat.west);
-        \draw[flowarr] (parquet.east) -- (prrcalc.west);
-        \draw[flowarr] (thresh.east) -- (hive.west);
-        \draw[flowarr] (thresh.east) -- (mongo.west);
-        \draw[flowarr] (mongo.east) -- (loader.west);
-        \draw[dasharr] (hive.east) -- (loader.west);
+        % Clean horizontal connectors
+        \draw[flowarr] (p1.east) -- (p2.west);
+        \draw[flowarr] (p2.east) -- (p3.west);
+        \draw[flowarr] (p3.east) -- (p4.west);
+        \draw[flowarr] (p4.east) -- (p5.west);
     \end{tikzpicture}
     }
 
-    \vspace{0.08cm}
-    \begin{beamercolorbox}[wd=0.98\textwidth,rounded=true,center,sep=3pt]{block body}
+    \vspace{0.10cm}
+    \begin{beamercolorbox}[wd=0.98\textwidth,rounded=true,center,sep=3.5pt]{block body}
       \scriptsize \textbf{Big Data Flow:} Raw Multi-Source Telemetry $\longrightarrow$ Distributed PySpark Catalyst ETL $\longrightarrow$ Vectorized Evans Matrix Scoring $\longrightarrow$ Dual Storage (OLAP + NoSQL) $\longrightarrow$ Sub-50ms Clinical Delivery.
     \end{beamercolorbox}
 \end{frame}
